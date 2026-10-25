@@ -1,0 +1,62 @@
+name: Build and Deploy WASM to GitHub Pages
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.17.0
+
+      - name: Setup Emscripten
+        uses: emscripten-core/setup-emsdk@v15
+        with:
+          version: 6.0.13
+
+      - name: Build WASM
+        run: |
+          zig build -Dtarget=wasm32-emscripten -Doptimize=ReleaseFast
+
+      - name: Verify output
+        run: |
+          ls -la zig-out/web/
+
+      - name: Prepare Deployment directory
+        run: |
+          mkdir -p ./deploy/assets
+          cp ./zig-out/web/*.{html,js,wasm} ./deploy/
+          cp -r assets/ ./deploy/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./deploy/
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
