@@ -9,7 +9,7 @@ permissions:
   pages: write
   id-token: write
 
-concurency:
+concurrency:
   group: "pages"
   cancel-in-progress: true
 
@@ -41,7 +41,8 @@ jobs:
       - name: Prepare Deployment directory
         run: |
           mkdir -p ./deploy/assets
-          cp ./zig-out/web/*.{html,js,wasm} ./deploy/
+          cp ./zig-out/web/*.{js,wasm} ./deploy/
+          cp ./zig-out/web/star-warior.html ./deploy/index.html
           cp -r assets/ ./deploy/
 
       - name: Upload Pages artifact

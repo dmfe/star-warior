@@ -18,7 +18,7 @@ pub fn main() void {
         defer rl.endDrawing();
 
         rl.clearBackground(.dark_purple);
-        rl.drawText("Hello, Star Warior!", 190, 200, 20, .green);
+        rl.drawText("Star Warior!", 190, 200, 20, .green);
     }
 
     //std.debug.print("Exiting Star Warior application\n", .{});
