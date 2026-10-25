@@ -2,14 +2,15 @@ const std = @import("std");
 const rl = @import("raylib");
 
 pub fn main() void {
-    //std.debug.print("Starting Star Warior application\n", .{});
-
     const width = 800;
     const height = 600;
 
     rl.setConfigFlags(.{ .window_resizable = true });
     rl.initWindow(width, height, "Star Warior");
     defer rl.closeWindow();
+
+    var x = @divTrunc(rl.getScreenWidth(), 2);
+    var y = @divTrunc(rl.getScreenHeight(), 2);
 
     rl.setTargetFPS(60);
 
@@ -18,9 +19,13 @@ pub fn main() void {
         defer rl.endDrawing();
 
         rl.clearBackground(.dark_purple);
-        rl.drawText("Star Warior!", 190, 200, 20, .green);
-    }
 
-    //std.debug.print("Exiting Star Warior application\n", .{});
+        if (rl.isKeyDown(.right)) x += 3;
+        if (rl.isKeyDown(.left)) x -= 3;
+        if (rl.isKeyDown(.down)) y += 3;
+        if (rl.isKeyDown(.up)) y -= 3;
+
+        rl.drawCircle(x, y, 16, .yellow);
+    }
 }
 
