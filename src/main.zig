@@ -6,10 +6,15 @@ const Shape = struct {
     y: f32,
     size: f32,
     speed: f32,
+    color: rl.Color,
 };
 
 fn genFloatRange(rand: std.Random, at: f32, most: f32) f32 {
     return at + rand.float(f32) * (most - at);
+}
+
+fn randomColor(rand: std.Random, colors: []const rl.Color) rl.Color {
+    return colors[rand.uintLessThan(usize, colors.len)];
 }
 
 pub fn main() !void {
@@ -35,6 +40,14 @@ pub fn main() !void {
     const enemy_min_size: f32 = 16.0;
     const enemy_max_size: f32 = 64.0;
 
+    const enemy_colors = [_]rl.Color{
+        .red,
+        .blue,
+        .green,
+        .orange,
+        .purple,
+        .gold,
+    };
     var enemies: std.ArrayList(Shape) = .empty;
     defer enemies.deinit(allocator);
     var player: Shape = .{
@@ -42,6 +55,7 @@ pub fn main() !void {
         .y = @as(f32, @floatFromInt(rl.getScreenHeight())) / 2.0,
         .size = 16.0,
         .speed = 400.0,
+        .color = .yellow,
     };
 
     rl.setTargetFPS(60);
@@ -73,6 +87,7 @@ pub fn main() !void {
                 .y = -size,
                 .size = size,
                 .speed = genFloatRange(rand, enemy_min_speed, enemy_max_speed),
+                .color = randomColor(rand, enemy_colors[0..]),
             });
         }
 
@@ -91,14 +106,14 @@ pub fn main() !void {
         enemies.shrinkRetainingCapacity(retain_enemy_ind);
 
         // Drawing objects
-        rl.drawCircleV(.{ .x = player.x, .y = player.y }, player.size, .yellow);
+        rl.drawCircleV(.{ .x = player.x, .y = player.y }, player.size, player.color);
         for (enemies.items) |enemy|
             rl.drawRectangleRec(.{
                 .x = enemy.x - enemy.size / 2.0,
                 .y = enemy.y - enemy.size / 2.0,
                 .width = enemy.size,
                 .height = enemy.size,
-            }, .red);
+            }, enemy.color);
 
         // Drawing Info
         var buf: [32]u8 = undefined;
