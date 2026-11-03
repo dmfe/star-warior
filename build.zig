@@ -13,6 +13,37 @@ pub fn build(b: *std.Build) !void {
     const raylib = raylib_dep.module("raylib");
     const raylib_artifact = raylib_dep.artifact("raylib");
 
+    const common = b.addLibrary(.{
+        .name = "common",
+        .root_module = b.addModule("common", .{
+            .root_source_file = b.path("src/common/root.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+
+    const platform = b.addLibrary(.{
+        .name = "platform",
+        .root_module = b.addModule("platform", .{
+            .root_source_file = b.path("src/platform/root.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    platform.root_module.addImport("common", common.root_module);
+    platform.root_module.addImport("raylib", raylib);
+
+    const core = b.addLibrary(.{
+        .name = "core",
+        .root_module = b.addModule("core", .{
+            .root_source_file = b.path("src/core/root.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    core.root_module.addImport("common", common.root_module);
+    core.root_module.addImport("platform", platform.root_module);
+
     const exe_name = b.option(
         []const u8,
         "exe_name",
@@ -24,7 +55,9 @@ pub fn build(b: *std.Build) !void {
         .target = target,
         .optimize = optimize,
     });
-    exe_mod.addImport("raylib", raylib);
+    exe_mod.addImport("platform", platform.root_module);
+    exe_mod.addImport("common", common.root_module);
+    exe_mod.addImport("core", core.root_module);
 
     const run_step = b.step("run", "Run star-warior application");
 
