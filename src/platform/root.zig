@@ -13,4 +13,5 @@ pub const getFPS = raylib.getFPS;
 pub const deltaTime = raylib.deltaTime;
 pub const screenWidth = raylib.screenWidth;
 pub const screenHeight = raylib.screenHeight;
+pub const measureText = raylib.measureText; 
 

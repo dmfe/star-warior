@@ -60,3 +60,14 @@ pub fn removeOffscreenEntities(entities: *std.ArrayList(Entity), screen_h: f32) 
     }
 }
 
+pub fn collidedWithEntities(
+    controllable: *Entity,
+    entities: []const Entity
+) bool {
+    for (entities) |*e|
+        if (controllable.is_collided(e))
+            return true;
+
+    return false;
+}
+

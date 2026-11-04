@@ -1,7 +1,8 @@
 const rl = @import("raylib");
 const common = @import("common");
 const Color = common.Color;
-const Direction = common.Direction;
+const Button = common.Button;
+const Vec2 = common.Vec2;
 
 // Window
 pub fn initWindow(width: i32, height: i32, title: [:0]const u8, resizable: bool) void {
@@ -37,19 +38,20 @@ pub fn screenHeight() f32 {
 }
 
 // Input
-pub fn isKeyDown(direction: Direction) bool {
-    return rl.isKeyDown(switch (direction) {
+pub fn isKeyDown(button: Button) bool {
+    return rl.isKeyDown(switch (button) {
         .left => .left,
         .right => .right,
         .up => .up,
         .down => .down,
+        .space => .space,
     });
 }
 
 // Frame
 pub fn beginFrame() void {
     rl.beginDrawing();
-    rl.clearBackground(.dark_purple);
+    rl.clearBackground(.black);
 }
 
 pub fn endFrame() void {
@@ -88,5 +90,15 @@ pub fn drawText(text: [:0]const u8, x: i32, y: i32, size: i32, color: Color) voi
         .b = color.b,
         .a = color.a,
     });
+}
+
+
+pub fn measureText(text: [:0]const u8, font_size: f32) !Vec2 {
+    const font = try rl.getFontDefault();
+    const size = rl.measureTextEx(font, text, font_size, 1.0);
+    return .{
+        .x = size.x,
+        .y = size.y,
+    };
 }
 

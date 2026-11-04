@@ -1,5 +1,6 @@
 const std = @import("std");
 const platform = @import("platform");
+const render = @import("core");
 const Random = @import("common").Random;
 const Scene = @import("core").Scene;
 
