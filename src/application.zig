@@ -14,14 +14,14 @@ pub const Config = struct {
 const Self = @This();
 scene: Scene,
 
-pub fn init(config: Config) Self {
+pub fn init(config: Config) !Self {
     const allocator = std.heap.c_allocator;
     const random = Random.init();
 
     platform.initWindow(config.width, config.height, config.title, config.resizable);
     errdefer platform.closeWindow();
 
-    const scene = Scene.init(allocator, random);
+    const scene = try Scene.init(allocator, random);
     errdefer scene.deinit();
 
     return .{

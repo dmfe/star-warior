@@ -1,7 +1,7 @@
 const App = @import("application.zig");
 
 pub fn main() !void {
-    var app = App.init(.{
+    var app = try App.init(.{
         .title = "Star Warior",
         .width = 800,
         .height = 600,

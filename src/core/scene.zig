@@ -4,28 +4,30 @@ const logic = @import("logic.zig");
 const render = @import("render.zig");
 const input = @import("input.zig");
 const State = @import("state.zig");
-const Entity = @import("entity.zig");
+const EntityParams = @import("params/entity-params.zig");
+const EntityRandomParams = @import("params/entity-random-params.zig");
 const common = @import("common");
 const Color = common.Color;
 const Random = common.Random;
 
 const Self = @This();
-state: State,
-allocator: std.mem.Allocator,
+state: *State,
 random: Random,
-entitiesParams: logic.EntitiesParams,
 
-pub fn init(allocator: std.mem.Allocator, random: Random) Self {
-    const controllable: Entity = .{
+pub fn init(allocator: std.mem.Allocator, random: Random) !Self {
+    const controllable_params: EntityParams = .{
         .x = platform.screenWidth() / 2.0,
         .y = platform.screenHeight() / 2.0,
         .size = 32.0,
         .speed = 400.0,
-        .color = Color.yellow,
+        .color = .yellow,
+        .projectile_params = .{
+            .size = 5.0,
+            .speed = 800.0,
+            .reload_time = 0.1,
+            .color = .green,
+        },
     };
-    var state = State.init(controllable);
-    errdefer state.deinit(allocator);
-
     const entities_colors = [_]Color{
         .red,
         .blue,
@@ -34,7 +36,7 @@ pub fn init(allocator: std.mem.Allocator, random: Random) Self {
         .purple,
         .gold,
     };
-    const entitiesParams: logic.EntitiesParams = .{
+    const entities_random_params: EntityRandomParams = .{
         .generation_chance = 85,
         .min_size = 16.0,
         .max_size = 64.0,
@@ -42,16 +44,17 @@ pub fn init(allocator: std.mem.Allocator, random: Random) Self {
         .max_speed = 150.0,
         .colors = entities_colors[0..],
     };
+    const state_ptr = try State.init(allocator, controllable_params, entities_random_params);
+    errdefer state_ptr.deinit();
+
     return .{
-        .state = state,
-        .allocator = allocator,
+        .state = state_ptr,
         .random = random,
-        .entitiesParams = entitiesParams,
     };
 }
 
 pub fn deinit(self: *Self) void {
-    self.state.deinit(self.allocator);
+    self.state.deinit();
 }
 
 pub fn update(self: *Self) !void {
@@ -60,29 +63,28 @@ pub fn update(self: *Self) !void {
     const screen_height: f32 = platform.screenHeight();
 
     const inp = input.poll();
-    if (self.state.running) {
-        const controllable = &self.state.controllable;
-        const entities = &self.state.entities;
-        logic.updateControllable(controllable, inp, delta_time);
-        logic.clampEntityToScreen(controllable, screen_width, screen_height);
-        try logic.generateRandomEntities(&self.random, self.allocator, entities, self.entitiesParams, screen_width);
-        logic.updateEntities(entities.items, delta_time);
-        logic.removeOffscreenEntities(entities, screen_height);
-        if (logic.collidedWithEntities(controllable, entities.items))
-            self.state.running = false;
-    } else if (inp.space) {
-        self.state.reset(screen_width / 2.0, screen_height / 2.0);
+    const state = self.state;
+    if (state.is_running()) {
+        logic.updateControllable(state, inp, delta_time);
+        logic.clampControllableToScreen(state, screen_width, screen_height);
+        try logic.addProjectile(state, inp);
+        try logic.generateRandomEntity(state, &self.random, screen_width);
+        logic.updateEntities(state, delta_time);
+        logic.removeOffscreenEntities(state, screen_height);
+        logic.removeCollidedEntities(state);
+        logic.checkCollisions(state);
+    } else if (inp.pressed.space) {
+        state.reset(screen_width / 2.0, screen_height / 2.0);
     }
 }
 
 pub fn draw(self: *Self) !void {
-    const controllable = &self.state.controllable;
-    const entities = &self.state.entities;
-    render.drawControllable(controllable);
-    render.drawEntities(entities.items);
+    const state = self.state;
+    render.drawControllable(state);
+    render.drawEntities(state);
     try render.drawFPS();
-    try render.drawEntitiesCount(entities.items);
-    if (!self.state.running) {
+    try render.drawEntitiesCount(state);
+    if (!self.state.is_running()) {
         try render.drawSimulationIsOverText("GAME OVER");
     }
 }

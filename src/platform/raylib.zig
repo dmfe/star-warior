@@ -21,6 +21,10 @@ pub fn shouldClose() bool {
 
 
 // Time / size / frame
+pub fn getTime() f64 {
+    return rl.getTime();
+}
+
 pub fn deltaTime() f32 {
     return rl.getFrameTime();
 }
@@ -40,6 +44,16 @@ pub fn screenHeight() f32 {
 // Input
 pub fn isKeyDown(button: Button) bool {
     return rl.isKeyDown(switch (button) {
+        .left => .left,
+        .right => .right,
+        .up => .up,
+        .down => .down,
+        .space => .space,
+    });
+}
+
+pub fn isKeyPressed(button: Button) bool {
+    return rl.isKeyPressed(switch (button) {
         .left => .left,
         .right => .right,
         .up => .up,

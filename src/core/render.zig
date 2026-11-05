@@ -1,9 +1,9 @@
 const std = @import("std");
 const platform = @import("platform");
-const Entity = @import("entity.zig");
+const State = @import("state.zig");
 
-pub fn drawEntities(entities: []const Entity) void {
-    for (entities) |e|
+pub fn drawEntities(state: *State) void {
+    for (state.entities.items) |e|
         platform.drawRect(
             e.x - e.size / 2.0,
             e.y - e.size / 2.0, 
@@ -11,9 +11,18 @@ pub fn drawEntities(entities: []const Entity) void {
             e.size,
             e.color
         );
+    for (state.projectiles.items) |p|
+        platform.drawRect(
+            p.x - p.size / 2.0,
+            p.y - p.size / 2.0, 
+            p.size,
+            p.size,
+            p.color
+        );
 }
 
-pub fn drawControllable(controllable: *const Entity) void {
+pub fn drawControllable(state: *State) void {
+    const controllable = state.controllable;
     platform.drawCircle(
         controllable.x,
         controllable.y,
@@ -33,12 +42,13 @@ pub fn drawFPS() !void {
     platform.drawText(fps_text, 10, 10, 20, .dark_green);
 }
 
-pub fn drawEntitiesCount(entities: []const Entity) !void {
+pub fn drawEntitiesCount(state: *State) !void {
+    const entities = state.entities;
     var buf: [32]u8 = undefined;
     const entities_count_text = try std.fmt.bufPrintSentinel(
         &buf,
         "Entities count: {d}",
-        .{ entities.len },
+        .{ entities.items.len },
         0,
     );
     platform.drawText(entities_count_text, 10, 40, 20, .dark_green);
