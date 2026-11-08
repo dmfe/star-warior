@@ -5,7 +5,7 @@ const render = @import("render.zig");
 const input = @import("input.zig");
 const State = @import("state.zig");
 const EntityParams = @import("params/entity-params.zig");
-const EntityRandomParams = @import("params/entity-random-params.zig");
+const EnemyParams = @import("params/enemy-params.zig");
 const common = @import("common");
 const Color = common.Color;
 const Random = common.Random;
@@ -36,15 +36,16 @@ pub fn init(allocator: std.mem.Allocator, random: Random) !Self {
         .purple,
         .gold,
     };
-    const entities_random_params: EntityRandomParams = .{
+    const enemy_params: EnemyParams = .{
         .generation_chance = 85,
+        .generation_cooldown = 0.1,
         .min_size = 16.0,
         .max_size = 64.0,
         .min_speed = 50.0,
         .max_speed = 150.0,
         .colors = entities_colors[0..],
     };
-    const state_ptr = try State.init(allocator, controllable_params, entities_random_params);
+    const state_ptr = try State.init(allocator, controllable_params, enemy_params);
     errdefer state_ptr.deinit();
 
     return .{
