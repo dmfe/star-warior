@@ -1,2 +1,2 @@
-pub const Scene = @import("scene.zig");
+pub const Simulation = @import("simulation.zig");
 

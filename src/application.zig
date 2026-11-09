@@ -1,8 +1,7 @@
 const std = @import("std");
 const platform = @import("platform");
-const render = @import("core");
 const Random = @import("common").Random;
-const Scene = @import("core").Scene;
+const Simulation = @import("core").Simulation;
 
 pub const Config = struct {
     title: [:0]const u8,
@@ -12,25 +11,25 @@ pub const Config = struct {
 };
 
 const Self = @This();
-scene: Scene,
+simulation: Simulation,
 
 pub fn init(config: Config) !Self {
-    const allocator = std.heap.c_allocator;
-    const random = Random.init();
-
     platform.initWindow(config.width, config.height, config.title, config.resizable);
     errdefer platform.closeWindow();
 
-    const scene = try Scene.init(allocator, random);
-    errdefer scene.deinit();
+    const allocator = std.heap.c_allocator;
+    const random = Random.init();
+
+    const simulation = try Simulation.init(allocator, random);
+    errdefer simulation.deinit();
 
     return .{
-        .scene = scene,
+        .simulation = simulation,
     };
 }
 
 pub fn deinit(self: *Self) void {
-    self.scene.deinit();
+    self.simulation.deinit();
     platform.closeWindow();
 }
 
@@ -39,8 +38,8 @@ pub fn run(self: *Self) !void {
         platform.beginFrame();
         defer platform.endFrame();
 
-        try self.scene.update();
-        try self.scene.draw();
+        try self.simulation.update();
+        try self.simulation.draw();
     }
 
 }

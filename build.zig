@@ -75,6 +75,8 @@ pub fn build(b: *std.Build) !void {
             "-sASYNCIFY",
             "-sFULL-ES3=1",
         });
+        emcc_cmd.addArg("--js-library");
+        emcc_cmd.addFileArg(b.path("src/web/storage.js"));
         emcc_cmd.addArg("--shell-file");
         emcc_cmd.addFileArg(b.path("src/web/shell.html"));
         emcc_cmd.step.dependOn(&wasm.step);

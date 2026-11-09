@@ -1,4 +1,5 @@
 const raylib = @import("raylib.zig");
+const builtin = @import("builtin");
 
 pub const initWindow = raylib.initWindow;
 pub const closeWindow = raylib.closeWindow;
@@ -16,4 +17,11 @@ pub const deltaTime = raylib.deltaTime;
 pub const screenWidth = raylib.screenWidth;
 pub const screenHeight = raylib.screenHeight;
 pub const measureText = raylib.measureText; 
+
+const storage = if (builtin.target.os.tag == .emscripten)
+    @import("storage_web.zig")
+else
+    @import("storage_desktop.zig");
+pub const loadMaxScore = storage.loadMaxScore;
+pub const saveMaxScore = storage.saveMaxScore;
 
