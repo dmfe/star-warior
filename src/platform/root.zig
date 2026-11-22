@@ -1,22 +1,24 @@
-const raylib = @import("raylib.zig");
+const common = @import("raylib/common.zig");
 const builtin = @import("builtin");
 
-pub const initWindow = raylib.initWindow;
-pub const closeWindow = raylib.closeWindow;
-pub const shouldClose = raylib.shouldClose; 
-pub const beginFrame = raylib.beginFrame;
-pub const endFrame = raylib.endFrame;
-pub const isKeyDown = raylib.isKeyDown;
-pub const isKeyPressed = raylib.isKeyPressed;
-pub const drawRect = raylib.drawRect;
-pub const drawCircle = raylib.drawCircle;
-pub const drawText = raylib.drawText;
-pub const getFPS = raylib.getFPS;
-pub const getTime = raylib.getTime;
-pub const deltaTime = raylib.deltaTime;
-pub const screenWidth = raylib.screenWidth;
-pub const screenHeight = raylib.screenHeight;
-pub const measureText = raylib.measureText; 
+pub const initWindow = common.initWindow;
+pub const closeWindow = common.closeWindow;
+pub const shouldClose = common.shouldClose; 
+pub const beginFrame = common.beginFrame;
+pub const endFrame = common.endFrame;
+pub const isKeyDown = common.isKeyDown;
+pub const isKeyPressed = common.isKeyPressed;
+pub const drawRect = common.drawRect;
+pub const drawCircle = common.drawCircle;
+pub const drawText = common.drawText;
+pub const getFPS = common.getFPS;
+pub const getTime = common.getTime;
+pub const deltaTime = common.deltaTime;
+pub const screenWidth = common.screenWidth;
+pub const screenHeight = common.screenHeight;
+pub const measureText = common.measureText; 
+
+pub const Shader = @import("raylib/shader.zig");
 
 const storage = if (builtin.target.os.tag == .emscripten)
     @import("storage_web.zig")

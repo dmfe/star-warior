@@ -83,7 +83,7 @@ pub fn build(b: *std.Build) !void {
         "exe_name",
         "Name of the executable",
     ) orelse "star-warior";
-    
+
     const exe_mod = b.createModule(.{
         .root_source_file = b.path("src/main.zig"),
         .target = target,
@@ -115,9 +115,13 @@ pub fn build(b: *std.Build) !void {
         emcc_cmd.addFileArg(b.path("src/web/storage.js"));
         emcc_cmd.addArg("--shell-file");
         emcc_cmd.addFileArg(b.path("src/web/shell.html"));
+        emcc_cmd.addArgs(&.{
+            "--preload-file",
+            "assets@/assets",
+        });
         emcc_cmd.step.dependOn(&wasm.step);
         emcc_cmd.step.dependOn(&raylib_artifact.step);
-        
+
         const html_filename = try std.fmt.allocPrint(b.allocator, "{s}.html", .{ wasm.name });
         const output_file = emcc_cmd.addPrefixedOutputFileArg("-o", html_filename);
         const install_html = b.addInstallFileWithDir(
@@ -128,8 +132,9 @@ pub fn build(b: *std.Build) !void {
         b.getInstallStep().dependOn(&install_html.step);
 
         const cache_dir = output_file.dirname();
-        const js_filename = b.fmt("{s}.js", .{ wasm.name });
-        const wasm_filename = b.fmt("{s}.wasm", .{ wasm.name });
+        const js_filename = b.fmt("{s}.js", .{wasm.name});
+        const wasm_filename = b.fmt("{s}.wasm", .{wasm.name});
+        const data_filename = b.fmt("{s}.data", .{wasm.name});
 
         const js_lazy = cache_dir.path(b, js_filename);
         const install_js = b.addInstallFileWithDir(
@@ -147,13 +152,30 @@ pub fn build(b: *std.Build) !void {
         );
         b.getInstallStep().dependOn(&install_wasm.step);
 
+        const data_lazy = cache_dir.path(b, data_filename);
+        const install_data = b.addInstallFileWithDir(
+            data_lazy,
+            .{ .custom = "web" },
+            data_filename,
+        );
+        b.getInstallStep().dependOn(&install_data.step);
+
         const emrun_cmd = b.addSystemCommand(&.{ "emrun" });
         emrun_cmd.addArg(b.fmt("zig-out/web/{s}", .{ html_filename }));
         emrun_cmd.step.dependOn(&install_html.step);
         emrun_cmd.step.dependOn(&install_js.step);
         emrun_cmd.step.dependOn(&install_wasm.step);
+        emrun_cmd.step.dependOn(&install_data.step);
         run_step.dependOn(&emrun_cmd.step);
     } else {
+        const install_assets = b.addInstallDirectory(.{
+            .source_dir = b.path("assets"),
+            .install_dir = .bin,
+            .install_subdir = "assets",
+        });
+
+        b.getInstallStep().dependOn(&install_assets.step);
+
         const exe = b.addExecutable(.{
             .name = exe_name,
             .root_module = exe_mod,
@@ -168,4 +190,3 @@ pub fn build(b: *std.Build) !void {
         run_step.dependOn(&run_cmd.step);
     }
 }
-

@@ -7,10 +7,12 @@ const settings_module = @import("settings");
 
 const Input = core.Input;
 const Random = common.Random;
+const Vec2 = common.Vec2;
 const AppState = app.State;
 const AppCommand = app.Command;
 const Gameplay = app.Gameplay;
 const Settings = settings_module.Settings;
+const Shader = platform.Shader;
 
 pub const Config = struct {
     title: [:0]const u8,
@@ -24,9 +26,12 @@ allocator: std.mem.Allocator,
 random: Random,
 settings: Settings,
 state: AppState,
+star_field: Shader, // shader testing
 exit_required: bool = false,
 
 pub fn init(config: Config) !Self {
+    const allocator = std.heap.c_allocator;
+
     platform.initWindow(
         config.width,
         config.height,
@@ -35,18 +40,28 @@ pub fn init(config: Config) !Self {
     );
     errdefer platform.closeWindow();
 
+    // shader testing
+    const star_field = try Shader.init(
+        "starfield.fs",
+        allocator,
+    );
+    errdefer star_field.deinit();
+    // shader testing
+
     return .{
-        .allocator = std.heap.c_allocator,
+        .allocator = allocator,
         .random = Random.init(),
         .settings = .{},
         .state = .{
             .main_menu = .{},
         },
+        .star_field = star_field, // shader testing
     };
 }
 
 pub fn deinit(self: *Self) void {
     self.state.deinit();
+    self.star_field.deinit(); // shader testing
     platform.closeWindow();
 }
 
@@ -73,12 +88,24 @@ pub fn run(self: *Self) !void {
         platform.beginFrame();
         defer platform.endFrame();
 
+        //shader testing
+        const resolution: Vec2 = .{
+            .x = platform.screenWidth(),
+            .y = platform.screenHeight(),
+        };
+        self.star_field.update(
+            resolution,
+            @floatCast(platform.getTime()),
+            0.0,
+        );
+        self.star_field.draw(resolution);
+        //shader testing
+
         switch (self.state) {
             .main_menu => |*main_menu| try main_menu.draw(),
             .gameplay => |*gameplay| try gameplay.draw(&self.settings),
         }
     }
-
 }
 
 fn applyCommand(
