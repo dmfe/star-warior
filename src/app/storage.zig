@@ -13,3 +13,4 @@ pub fn loadMaxScore() u64 {
         break :blk 0;
     };
 }
+

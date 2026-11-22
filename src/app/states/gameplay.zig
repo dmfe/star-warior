@@ -3,10 +3,13 @@ const common = @import("common");
 const core = @import("core");
 const settings_module = @import("settings");
 const gameplay = @import("gameplay");
+const storage = @import("../storage.zig");
 
 const Random = common.Random;
 const Input = core.Input;
 const Simulation = core.Simulation;
+const SimulationContext = core.SimulationContext;
+const Statistics = core.Statistics;
 const Settings = settings_module.Settings;
 const Layer = gameplay.Layer;
 const LayerStack = gameplay.LayerStack;
@@ -18,26 +21,31 @@ const AppCommand = @import("../command.zig").Command;
 const Self = @This();
 simulation: Simulation,
 layers: LayerStack,
+statistics: Statistics,
 
 pub fn init(
     allocator: std.mem.Allocator,
     random: Random,
 ) !Self {
-    var simulation =try Simulation.init(
+    var simulation = try Simulation.init(
         allocator,
         random,
     );
     errdefer simulation.deinit();
+
+    const max_score = storage.loadMaxScore();
 
     return .{
         .simulation = simulation,
         .layers = LayerStack.init(.{
             .playing = .{},
         }),
+        .statistics = .{ .max_score = max_score },
     };
 }
 
 pub fn deinit(self: *Self) void {
+    storage.saveMaxScore(self.statistics.max_score);
     self.simulation.deinit();
 }
 
@@ -58,9 +66,14 @@ pub fn update(
         return app_command;
 
     if (!self.layers.blocksSimulationUpdate()) {
+        var simulation_context: SimulationContext = .{
+            .statistics = &self.statistics,
+        };
+
         const event = try self.simulation.update(
             input,
             delta_time,
+            &simulation_context,
         );
 
         switch (event) {
@@ -69,6 +82,7 @@ pub fn update(
                 try self.layers.push(.{
                     .game_over = .{},
                 });
+                storage.saveMaxScore(self.statistics.max_score);
             },
         }
     }
@@ -80,16 +94,18 @@ pub fn draw(
     self: *const Self,
     settings: *Settings,
 ) !void {
-    try self.simulation.draw();
+    const simulation_context: SimulationContext = .{
+        .statistics = @constCast(&self.statistics),
+    };
+    try self.simulation.draw(&simulation_context);
+
+    const layers = self.layers.constItems();
+    const start = firstVisibleLayer(layers);
 
     const context: LayerContext = .{
         .simulation = @constCast(&self.simulation),
         .settings = settings,
     };
-
-    const layers = self.layers.constItems();
-    const start = firstVisibleLayer(layers);
-
     for (layers[start..]) |layer|
         try layer.draw(&context);
 }
@@ -155,7 +171,11 @@ fn applyLayerCommand(
             try self.layers.push(layer);
         },
         .restart_game => {
-            self.simulation.reset();
+            var simulation_context: SimulationContext = .{
+                .statistics = &self.statistics,
+            };
+
+            self.simulation.reset(&simulation_context);
             self.layers.reset(.{
                 .playing = .{},
             });

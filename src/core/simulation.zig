@@ -9,6 +9,7 @@ const Vec2 = common.Vec2;
 const Input = @import("input.zig");
 const Statistics = @import("statistics.zig");
 const Event = @import("simulation_event.zig").Event;
+const SimulationContext = @import("simulation_context.zig").Context;
 
 const EnemySpawner = @import("spawning/enemy_spawner.zig");
 const EnemyParams = @import("spawning/enemy_params.zig");
@@ -22,7 +23,6 @@ const movement = @import("systems/movement.zig");
 const shooting = @import("systems/shooting.zig");
 const collision = @import("systems/collision.zig");
 const cleanup = @import("systems/cleanup.zig");
-const storage = @import("systems/storage.zig");
 
 const Self = @This();
 allocator: std.mem.Allocator,
@@ -31,7 +31,6 @@ player: Player,
 enemies: std.ArrayList(Enemy),
 projectiles: std.ArrayList(Projectile),
 enemy_spawner: EnemySpawner,
-statistics: Statistics,
 simulation_time: f64,
 
 pub fn init(
@@ -92,8 +91,6 @@ pub fn init(
     });
     // testing inventory
 
-    const max_score = storage.loadMaxScore();
-
     return .{
         .allocator = allocator,
         .random = random,
@@ -101,13 +98,11 @@ pub fn init(
         .enemies = .empty,
         .projectiles = .empty,
         .enemy_spawner = enemy_spawner,
-        .statistics = .{ .max_score = max_score },
         .simulation_time = simulation_time,
     };
 }
 
 pub fn deinit(self: *Self) void {
-    storage.saveMaxScore(self.statistics.max_score);
     self.enemy_spawner.deinit(self.allocator);
     self.enemies.deinit(self.allocator);
     self.projectiles.deinit(self.allocator);
@@ -117,6 +112,7 @@ pub fn update(
     self: *Self,
     input: Input,
     delta_time: f32,
+    context: *SimulationContext,
 ) !Event {
     self.simulation_time += @as(f64, delta_time);
 
@@ -147,7 +143,7 @@ pub fn update(
         &self.player,
         self.enemies.items,
         self.projectiles.items,
-        &self.statistics,
+        context.statistics,
     );
 
     if (collision_result.player_died)
@@ -156,13 +152,16 @@ pub fn update(
     return .none;
 }
 
-pub fn draw(self: *const Self) !void {
+pub fn draw(
+    self: *const Self,
+    context: *const SimulationContext,
+) !void {
     render.drawPlayer(&self.player);
     render.drawEnemies(self.enemies.items);
     render.drawProjectiles(self.projectiles.items);
     try render.drawFPS();
     try render.drawEnemiesCount(self.enemies.items);
-    try render.drawStatistics(self.statistics);
+    try render.drawStatistics(context.statistics.*);
 }
 
 pub fn useInventoryItem(
@@ -185,7 +184,10 @@ pub fn useInventoryItem(
     }
 }
 
-pub fn reset(self: *Self) void {
+pub fn reset(
+    self: *Self,
+    context: *SimulationContext,
+) void {
     const screen_width = platform.screenWidth();
     const screen_height = platform.screenHeight();
 
@@ -198,6 +200,6 @@ pub fn reset(self: *Self) void {
     self.enemies.clearRetainingCapacity();
     self.enemy_spawner.next_generation_time = self.simulation_time - 0.1;
     self.projectiles.clearRetainingCapacity();
-    self.statistics.current_score = 0;
+    context.statistics.current_score = 0;
 }
 

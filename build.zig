@@ -77,6 +77,7 @@ pub fn build(b: *std.Build) !void {
     app.root_module.addImport("core", core.root_module);
     app.root_module.addImport("gameplay", gameplay.root_module);
     app.root_module.addImport("settings", settings.root_module);
+    app.root_module.addImport("platform", platform.root_module);
 
     const exe_name = b.option(
         []const u8,
