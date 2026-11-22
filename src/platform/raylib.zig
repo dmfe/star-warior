@@ -9,6 +9,7 @@ pub fn initWindow(width: i32, height: i32, title: [:0]const u8, resizable: bool)
     rl.setConfigFlags(.{ .window_resizable = resizable });
     rl.initWindow(width, height, title);
     rl.setTargetFPS(60);
+    rl.setExitKey(.null);
 }
 
 pub fn closeWindow() void {
@@ -43,23 +44,11 @@ pub fn screenHeight() f32 {
 
 // Input
 pub fn isKeyDown(button: Button) bool {
-    return rl.isKeyDown(switch (button) {
-        .left => .left,
-        .right => .right,
-        .up => .up,
-        .down => .down,
-        .space => .space,
-    });
+    return rl.isKeyDown(toRaylibKey(button));
 }
 
 pub fn isKeyPressed(button: Button) bool {
-    return rl.isKeyPressed(switch (button) {
-        .left => .left,
-        .right => .right,
-        .up => .up,
-        .down => .down,
-        .space => .space,
-    });
+    return rl.isKeyPressed(toRaylibKey(button));
 }
 
 // Frame
@@ -113,6 +102,18 @@ pub fn measureText(text: [:0]const u8, font_size: f32) !Vec2 {
     return .{
         .x = size.x,
         .y = size.y,
+    };
+}
+
+fn toRaylibKey(button: Button) rl.KeyboardKey {
+    return switch (button) {
+        .left => .left,
+        .right => .right,
+        .up => .up,
+        .down => .down,
+        .space => .space,
+        .escape => .escape,
+        .i => .i,
     };
 }
 

@@ -4,5 +4,7 @@ pub const Button = enum {
     up,
     down,
     space,
+    escape,
+    i,
 };
 

@@ -3,18 +3,22 @@ const Player = @import("../entities/player.zig");
 const Enemy = @import("../entities/enemy.zig");
 const Projectile = @import("../entities/projectile.zig");
 const Statistics = @import("../statistics.zig");
-const Phase = @import("../phase.zig").Phase;
+
+pub const Result = struct {
+    player_died: bool = false,
+};
 
 pub fn update(
     player: *Player,
     enemies: []Enemy,
     projectiles: []Projectile,
     statistics: *Statistics,
-    phase: *Phase,
-) void {
+) Result {
+    var result: Result = .{};
+
     for (enemies) |e|
         if (player.body.is_collided(&e.body)) {
-            phase.* = .finished;
+            result.player_died = true;
             break;
         };
     for (enemies) |*e|
@@ -24,5 +28,7 @@ pub fn update(
                 e.destroyed = true;
                 statistics.addScore(e.score_value);
             };
+
+    return result;
 }
 

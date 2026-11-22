@@ -22,6 +22,15 @@ pub fn build(b: *std.Build) !void {
         }),
     });
 
+    const settings = b.addLibrary(.{
+        .name = "settings",
+        .root_module = b.addModule("settings", .{
+            .root_source_file = b.path("src/settings/root.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+
     const platform = b.addLibrary(.{
         .name = "platform",
         .root_module = b.addModule("platform", .{
@@ -44,6 +53,31 @@ pub fn build(b: *std.Build) !void {
     core.root_module.addImport("common", common.root_module);
     core.root_module.addImport("platform", platform.root_module);
 
+    const gameplay = b.addLibrary(.{
+        .name = "gameplay",
+        .root_module = b.addModule("gameplay", .{
+            .root_source_file = b.path("src/gameplay/root.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    gameplay.root_module.addImport("common", common.root_module);
+    gameplay.root_module.addImport("core", core.root_module);
+    gameplay.root_module.addImport("settings", settings.root_module);
+
+    const app = b.addLibrary(.{
+        .name = "app",
+        .root_module = b.addModule("app", .{
+            .root_source_file = b.path("src/app/root.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    app.root_module.addImport("common", common.root_module);
+    app.root_module.addImport("core", core.root_module);
+    app.root_module.addImport("gameplay", gameplay.root_module);
+    app.root_module.addImport("settings", settings.root_module);
+
     const exe_name = b.option(
         []const u8,
         "exe_name",
@@ -58,6 +92,8 @@ pub fn build(b: *std.Build) !void {
     exe_mod.addImport("platform", platform.root_module);
     exe_mod.addImport("common", common.root_module);
     exe_mod.addImport("core", core.root_module);
+    exe_mod.addImport("app", app.root_module);
+    exe_mod.addImport("settings", settings.root_module);
 
     const run_step = b.step("run", "Run star-warior application");
 

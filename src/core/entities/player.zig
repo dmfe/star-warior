@@ -1,15 +1,18 @@
 const Body = @import("body.zig");
 const Weapon = @import("weapon.zig");
+const Inventory = @import("inventory.zig");
 const Input = @import("../input.zig");
 
 const Self = @This();
 body: Body,
 weapon: Weapon,
+inventory: Inventory,
 
 pub fn init(body: Body, weapon: Weapon) Self {
     return .{
         .body = body,
         .weapon = weapon,
+        .inventory = .{},
     };
 }
 
@@ -20,4 +23,3 @@ pub fn update(self: *Self, input: Input, delta_time: f32) void {
     if (input.down.down) self.body.position.y += speed * delta_time;
     if (input.down.up) self.body.position.y -= speed * delta_time;
 }
-

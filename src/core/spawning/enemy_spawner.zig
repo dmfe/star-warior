@@ -23,7 +23,7 @@ pub fn init(
     return .{
         .enemy_params = params,
         .colors = own_colors,
-        .next_generation_time = current_time,
+        .next_generation_time = current_time - 0.1,
     };
 }
 
@@ -40,25 +40,28 @@ pub fn spawn(
     screen_size: Vec2,
     current_time: f64,
 ) !void {
+    if (current_time < self.next_generation_time)
+        return;
+
     const params = self.enemy_params;
-    if (current_time > self.next_generation_time
-        and random.intRangeAtMost(0, 99) >= params.generation_chance)
-    {
-        const size = random.genFloatRange(params.min_size, params.max_size);
-        const enemy: Enemy = .{
-            .body = .{
-                .position = .{
-                    .x = random.genFloatRange(size / 2.0, screen_size.x - size / 2.0),
-                    .y = -size,
-                },
-                .size = size,
-                .speed = random.genFloatRange(params.min_speed, params.max_speed),
-                .color = random.randomColor(self.colors),
+    self.next_generation_time = current_time + params.generation_cooldown;
+
+    if (random.intRangeAtMost(0, 99) < 100 - params.generation_chance)
+        return;
+
+    const size = random.genFloatRange(params.min_size, params.max_size);
+    const enemy: Enemy = .{
+        .body = .{
+            .position = .{
+                .x = random.genFloatRange(size / 2.0, screen_size.x - size / 2.0),
+                .y = -size,
             },
-            .score_value = @as(u32, @intFromFloat(size)),
-        };
-        try enemies.append(allocator, enemy);
-        self.next_generation_time = current_time + params.generation_cooldown;
-    }
+            .size = size,
+            .speed = random.genFloatRange(params.min_speed, params.max_speed),
+            .color = random.randomColor(self.colors),
+        },
+        .score_value = @as(u32, @intFromFloat(size)),
+    };
+    try enemies.append(allocator, enemy);
 }
 

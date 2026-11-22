@@ -16,6 +16,8 @@ const Pressed = struct {
     up: bool = false,
     down: bool = false,
     space: bool = false,
+    escape: bool = false,
+    inventory: bool = false,
 };
 
 const Self = @This();
@@ -37,6 +39,8 @@ pub fn poll() Self {
             .up = isKeyPressed(.up),
             .down = isKeyPressed(.down),
             .space = isKeyPressed(.space),
+            .escape = isKeyPressed(.escape),
+            .inventory = isKeyPressed(.i),
         },
     };
 }
