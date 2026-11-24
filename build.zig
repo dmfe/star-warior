@@ -42,6 +42,16 @@ pub fn build(b: *std.Build) !void {
     platform.root_module.addImport("common", common.root_module);
     platform.root_module.addImport("raylib", raylib);
 
+    const resources = b.addLibrary(.{
+        .name = "resources",
+        .root_module = b.addModule("resources", .{
+            .root_source_file = b.path("src/resources/root.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    resources.root_module.addImport("platform", platform.root_module);
+
     const core = b.addLibrary(.{
         .name = "core",
         .root_module = b.addModule("core", .{
@@ -52,6 +62,19 @@ pub fn build(b: *std.Build) !void {
     });
     core.root_module.addImport("common", common.root_module);
     core.root_module.addImport("platform", platform.root_module);
+
+    const rendering = b.addLibrary(.{
+        .name = "rendering",
+        .root_module = b.addModule("rendering", .{
+            .root_source_file = b.path("src/rendering/root.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    rendering.root_module.addImport("core", core.root_module);
+    rendering.root_module.addImport("common", common.root_module);
+    rendering.root_module.addImport("platform", platform.root_module);
+    rendering.root_module.addImport("resources", resources.root_module);
 
     const gameplay = b.addLibrary(.{
         .name = "gameplay",
@@ -64,6 +87,7 @@ pub fn build(b: *std.Build) !void {
     gameplay.root_module.addImport("common", common.root_module);
     gameplay.root_module.addImport("core", core.root_module);
     gameplay.root_module.addImport("settings", settings.root_module);
+    gameplay.root_module.addImport("rendering", rendering.root_module);
 
     const app = b.addLibrary(.{
         .name = "app",
@@ -78,6 +102,8 @@ pub fn build(b: *std.Build) !void {
     app.root_module.addImport("gameplay", gameplay.root_module);
     app.root_module.addImport("settings", settings.root_module);
     app.root_module.addImport("platform", platform.root_module);
+    app.root_module.addImport("resources", resources.root_module);
+    app.root_module.addImport("rendering", rendering.root_module);
 
     const exe_name = b.option(
         []const u8,
@@ -95,6 +121,7 @@ pub fn build(b: *std.Build) !void {
     exe_mod.addImport("core", core.root_module);
     exe_mod.addImport("app", app.root_module);
     exe_mod.addImport("settings", settings.root_module);
+    exe_mod.addImport("resources", resources.root_module);
 
     const run_step = b.step("run", "Run star-warior application");
 

@@ -1,6 +1,10 @@
 const core = @import("core");
-const render = core.render;
+const rendering = @import("rendering");
+
+const drawCenteredText = rendering.drawCenteredText;
+
 const Input = core.Input;
+
 const Context = @import("../layer_context.zig").Context;
 const Command = @import("../layer_command.zig").Command;
 
@@ -29,8 +33,8 @@ pub fn draw(
     _ = self;
     _ = context;
 
-    try render.drawCenteredText("GAME OVER", 50.0, 0.8, .red);
-    try render.drawCenteredText("Space: restart", 24.0, 1.2, .white);
-    try render.drawCenteredText("Escape: main menu", 24.0, 1.4, .white);
+    try drawCenteredText("GAME OVER", 50.0, 0.8, .red);
+    try drawCenteredText("Space: restart", 24.0, 1.2, .white);
+    try drawCenteredText("Escape: main menu", 24.0, 1.4, .white);
 }
 

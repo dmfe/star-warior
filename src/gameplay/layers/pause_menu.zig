@@ -1,8 +1,13 @@
 const core = @import("core");
 const common = @import("common");
-const render = core.render;
+const rendering = @import("rendering");
+
+const drawCenteredText = rendering.drawCenteredText;
+
 const Input = core.Input;
+
 const Color = common.Color;
+
 const Context = @import("../layer_context.zig").Context;
 const Command = @import("../layer_command.zig").Command;
 
@@ -51,9 +56,9 @@ pub fn draw(
     const settings_color: Color = if (self.selected_item == 1) .yellow else .white;
     const menu_color: Color = if (self.selected_item == 2) .yellow else .white;
 
-    try render.drawCenteredText("PAUSED", 50.0, 0.8, .white);
-    try render.drawCenteredText("Resume", 24.0, 1.2, resume_color);
-    try render.drawCenteredText("Settings", 24.0, 1.4, settings_color);
-    try render.drawCenteredText("Main menu", 24.0, 1.6, menu_color);
+    try drawCenteredText("PAUSED", 50.0, 0.8, .white);
+    try drawCenteredText("Resume", 24.0, 1.2, resume_color);
+    try drawCenteredText("Settings", 24.0, 1.4, settings_color);
+    try drawCenteredText("Main menu", 24.0, 1.6, menu_color);
 }
 

@@ -4,15 +4,21 @@ const core = @import("core");
 const common = @import("common");
 const platform = @import("platform");
 const settings_module = @import("settings");
+const resources_module = @import("resources");
 
 const Input = core.Input;
+
 const Random = common.Random;
 const Vec2 = common.Vec2;
+
 const AppState = app.State;
 const AppCommand = app.Command;
 const Gameplay = app.Gameplay;
+const MainMenu = app.MainMenu;
+
 const Settings = settings_module.Settings;
-const Shader = platform.Shader;
+
+const ResourceManager = resources_module.ResourceManager;
 
 pub const Config = struct {
     title: [:0]const u8,
@@ -26,7 +32,7 @@ allocator: std.mem.Allocator,
 random: Random,
 settings: Settings,
 state: AppState,
-star_field: Shader, // shader testing
+resources: ResourceManager,
 exit_required: bool = false,
 
 pub fn init(config: Config) !Self {
@@ -40,28 +46,31 @@ pub fn init(config: Config) !Self {
     );
     errdefer platform.closeWindow();
 
-    // shader testing
-    const star_field = try Shader.init(
-        "starfield.fs",
-        allocator,
+    var resources = ResourceManager.init(allocator);
+    errdefer resources.deinit();
+
+    // loading resources
+    _ = try resources.loadShader(
+        "shader/starfield",
+        "starfield.fs"
     );
-    errdefer star_field.deinit();
-    // shader testing
+
+    const main_menu = try MainMenu.init(&resources);
 
     return .{
         .allocator = allocator,
         .random = Random.init(),
         .settings = .{},
         .state = .{
-            .main_menu = .{},
+            .main_menu = main_menu,
         },
-        .star_field = star_field, // shader testing
+        .resources = resources,
     };
 }
 
 pub fn deinit(self: *Self) void {
     self.state.deinit();
-    self.star_field.deinit(); // shader testing
+    self.resources.deinit();
     platform.closeWindow();
 }
 
@@ -75,8 +84,8 @@ pub fn run(self: *Self) !void {
             .main_menu => |*main_menu| main_menu.update(input),
             .gameplay => |*gameplay| try gameplay.update(
                 input,
-                delta_time,
                 &self.settings,
+                delta_time,
             ),
         };
 
@@ -88,22 +97,22 @@ pub fn run(self: *Self) !void {
         platform.beginFrame();
         defer platform.endFrame();
 
-        //shader testing
         const resolution: Vec2 = .{
             .x = platform.screenWidth(),
             .y = platform.screenHeight(),
         };
-        self.star_field.update(
-            resolution,
-            @floatCast(platform.getTime()),
-            0.0,
-        );
-        self.star_field.draw(resolution);
-        //shader testing
-
         switch (self.state) {
-            .main_menu => |*main_menu| try main_menu.draw(),
-            .gameplay => |*gameplay| try gameplay.draw(&self.settings),
+            .main_menu => |*main_menu| try main_menu.draw(
+                &self.resources,
+                resolution,
+                @floatCast(platform.getTime()),
+            ),
+            .gameplay => |*gameplay| try gameplay.draw(
+                &self.resources,
+                &self.settings,
+                resolution,
+                @floatCast(platform.getTime()),
+            ),
         }
     }
 }
@@ -117,7 +126,8 @@ fn applyCommand(
         .start_game => {
             const gameplay = try Gameplay.init(
                 self.allocator,
-                self.random
+                self.random,
+                &self.resources,
             );
             self.state.deinit();
             self.state = .{
@@ -125,9 +135,12 @@ fn applyCommand(
             };
         },
         .return_to_menu => {
+            const main_menu = try MainMenu.init(
+                &self.resources
+            );
             self.state.deinit();
             self.state = .{
-                .main_menu = .{},
+                .main_menu = main_menu,
             };
         },
         .exit => {

@@ -10,6 +10,7 @@ const Input = @import("input.zig");
 const Statistics = @import("statistics.zig");
 const Event = @import("simulation_event.zig").Event;
 const SimulationContext = @import("simulation_context.zig").Context;
+const SimulationView = @import("simulation_view.zig").SimulationView;
 
 const EnemySpawner = @import("spawning/enemy_spawner.zig");
 const EnemyParams = @import("spawning/enemy_params.zig");
@@ -18,7 +19,6 @@ const Player = @import("entities/player.zig");
 const Enemy = @import("entities/enemy.zig");
 const Projectile = @import("entities/projectile.zig");
 
-const render = @import("render.zig");
 const movement = @import("systems/movement.zig");
 const shooting = @import("systems/shooting.zig");
 const collision = @import("systems/collision.zig");
@@ -152,16 +152,12 @@ pub fn update(
     return .none;
 }
 
-pub fn draw(
-    self: *const Self,
-    context: *const SimulationContext,
-) !void {
-    render.drawPlayer(&self.player);
-    render.drawEnemies(self.enemies.items);
-    render.drawProjectiles(self.projectiles.items);
-    try render.drawFPS();
-    try render.drawEnemiesCount(self.enemies.items);
-    try render.drawStatistics(context.statistics.*);
+pub fn view(self: *const Self) SimulationView {
+    return .{
+        .player = &self.player,
+        .enemies = self.enemies.items,
+        .projectiles = self.projectiles.items,
+    };
 }
 
 pub fn useInventoryItem(

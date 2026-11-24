@@ -1,7 +1,11 @@
 const std = @import("std");
 const core = @import("core");
-const render = core.render;
+const rendering = @import("rendering");
+
+const drawCenteredText = rendering.drawCenteredText;
+
 const Input = core.Input;
+
 const Context = @import("../layer_context.zig").Context;
 const Command = @import("../layer_command.zig").Command;
 
@@ -33,7 +37,7 @@ pub fn draw(
 ) !void {
     const inventory = &context.simulation.player.inventory;
 
-    try render.drawCenteredText("INVENTORY", 40.0, 0.8, .white);
+    try drawCenteredText("INVENTORY", 40.0, 0.8, .white);
 
     var buffer: [64]u8 = undefined;
     const text = if (inventory.slots[self.selected_slot]) |item|
@@ -55,8 +59,8 @@ pub fn draw(
             0,
         );
 
-    try render.drawCenteredText(text, 24.0, 1.1, .yellow);
-    try render.drawCenteredText(
+    try drawCenteredText(text, 24.0, 1.1, .yellow);
+    try drawCenteredText(
         "Left/Right: select  Space: use  I/Escape: close",
         18.0,
         1.3,

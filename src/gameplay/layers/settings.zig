@@ -1,9 +1,15 @@
 const core = @import("core");
-const render = core.render;
+const settings_module = @import("settings");
+const rendering = @import("rendering");
+
+const drawCenteredText = rendering.drawCenteredText;
+
 const Input = core.Input;
+
+const Settings = settings_module.Settings;
+
 const Context = @import("../layer_context.zig").Context;
 const Command = @import("../layer_command.zig").Command;
-const Settings = @import("settings").Settings;
 
 const Self = @This();
 draft: Settings,
@@ -49,6 +55,6 @@ pub fn draw(
     _ = self;
     _ = context;
 
-    try render.drawCenteredText("SETTINGS", 50.0, 0.8, .white);
+    try drawCenteredText("SETTINGS", 50.0, 0.8, .white);
 }
 

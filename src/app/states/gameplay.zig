@@ -3,14 +3,20 @@ const common = @import("common");
 const core = @import("core");
 const settings_module = @import("settings");
 const gameplay = @import("gameplay");
+const rendering = @import("rendering");
+const resources_module = @import("resources");
 const storage = @import("../storage.zig");
 
 const Random = common.Random;
+const Vec2 = common.Vec2;
+
 const Input = core.Input;
 const Simulation = core.Simulation;
 const SimulationContext = core.SimulationContext;
 const Statistics = core.Statistics;
+
 const Settings = settings_module.Settings;
+
 const Layer = gameplay.Layer;
 const LayerStack = gameplay.LayerStack;
 const LayerContext = gameplay.LayerContext;
@@ -18,14 +24,24 @@ const LayerCommand = gameplay.LayerCommand;
 const SettingsLayer = gameplay.SettingsLayer;
 const AppCommand = @import("../command.zig").Command;
 
+const ResourceManager = resources_module.ResourceManager;
+
+const BackgroundRenderer = rendering.BackgroundRenderer;
+const SimulationRenderer = rendering.SimulationRenderer;
+const HudRenderer = rendering.HudRenderer;
+
 const Self = @This();
 simulation: Simulation,
 layers: LayerStack,
 statistics: Statistics,
+background_renderer: BackgroundRenderer,
+simulation_renderer: SimulationRenderer,
+hud_renderer: HudRenderer,
 
 pub fn init(
     allocator: std.mem.Allocator,
     random: Random,
+    resources: *const ResourceManager,
 ) !Self {
     var simulation = try Simulation.init(
         allocator,
@@ -41,6 +57,9 @@ pub fn init(
             .playing = .{},
         }),
         .statistics = .{ .max_score = max_score },
+        .background_renderer = try BackgroundRenderer.init(resources),
+        .simulation_renderer = SimulationRenderer.init(resources),
+        .hud_renderer = HudRenderer.init(resources),
     };
 }
 
@@ -52,8 +71,8 @@ pub fn deinit(self: *Self) void {
 pub fn update(
     self: *Self,
     input: Input,
-    delta_time: f32,
     settings: *Settings,
+    delta_time: f32,
 ) !AppCommand {
     var context: LayerContext = .{
         .simulation = &self.simulation,
@@ -92,12 +111,26 @@ pub fn update(
 
 pub fn draw(
     self: *const Self,
+    resources: *ResourceManager,
     settings: *Settings,
+    resolution: Vec2,
+    time: f32,
 ) !void {
-    const simulation_context: SimulationContext = .{
-        .statistics = @constCast(&self.statistics),
-    };
-    try self.simulation.draw(&simulation_context);
+    const simulation_view = self.simulation.view();
+    self.background_renderer.draw(
+        resources,
+        resolution,
+        time,
+    );
+    self.simulation_renderer.draw(
+        resources,
+        simulation_view,
+    );
+    try self.hud_renderer.draw(
+        resources,
+        &self.statistics,
+        simulation_view,
+    );
 
     const layers = self.layers.constItems();
     const start = firstVisibleLayer(layers);
