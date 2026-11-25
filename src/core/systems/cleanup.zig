@@ -2,10 +2,12 @@ const std = @import("std");
 const Vec2 = @import("common").Vec2;
 const Enemy = @import("../entities/enemy.zig");
 const Projectile = @import("../entities/projectile.zig");
+const Explosion = @import("../entities/explosion.zig");
 
 pub fn update(
     enemies: *std.ArrayList(Enemy),
     projectiles: *std.ArrayList(Projectile),
+    explosions: *std.ArrayList(Explosion),
     screen_size: Vec2,
 ) void {
     var i: usize = enemies.items.len;
@@ -18,6 +20,7 @@ pub fn update(
             _ = enemies.swapRemove(i);
         }
     }
+
     i = projectiles.items.len;
     while (i > 0) {
         i -= 1;
@@ -26,6 +29,14 @@ pub fn update(
             or projectiles.items[i].body.position.y < 0.0 - projectiles.items[i].body.size / 2.0
         ) {
             _ = projectiles.swapRemove(i);
+        }
+    }
+
+    i = explosions.items.len;
+    while (i > 0) {
+        i -= 1;
+        if (explosions.items[i].expired()) {
+            _ = explosions.swapRemove(i);
         }
     }
 }

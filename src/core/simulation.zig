@@ -18,10 +18,12 @@ const EnemyParams = @import("spawning/enemy_params.zig");
 const Player = @import("entities/player.zig");
 const Enemy = @import("entities/enemy.zig");
 const Projectile = @import("entities/projectile.zig");
+const Explosion = @import("entities/explosion.zig");
 
 const movement = @import("systems/movement.zig");
 const shooting = @import("systems/shooting.zig");
 const collision = @import("systems/collision.zig");
+const explosion_system = @import("systems/explosions.zig");
 const cleanup = @import("systems/cleanup.zig");
 
 const Self = @This();
@@ -30,6 +32,7 @@ random: Random,
 player: Player,
 enemies: std.ArrayList(Enemy),
 projectiles: std.ArrayList(Projectile),
+explosions: std.ArrayList(Explosion),
 enemy_spawner: EnemySpawner,
 simulation_time: f64,
 
@@ -97,6 +100,7 @@ pub fn init(
         .player = player,
         .enemies = .empty,
         .projectiles = .empty,
+        .explosions = .empty,
         .enemy_spawner = enemy_spawner,
         .simulation_time = simulation_time,
     };
@@ -106,6 +110,7 @@ pub fn deinit(self: *Self) void {
     self.enemy_spawner.deinit(self.allocator);
     self.enemies.deinit(self.allocator);
     self.projectiles.deinit(self.allocator);
+    self.explosions.deinit(self.allocator);
 }
 
 pub fn update(
@@ -138,12 +143,22 @@ pub fn update(
     );
     movement.updateEnemies(self.enemies.items, delta_time);
     movement.updateProjectiles(self.projectiles.items, delta_time);
-    cleanup.update(&self.enemies, &self.projectiles, screen_size);
-    const collision_result = collision.update(
+    explosion_system.update(self.explosions.items, delta_time);
+    const collision_result = try collision.update(
+        self.allocator,
+        &self.random,
         &self.player,
         self.enemies.items,
         self.projectiles.items,
+        &self.explosions,
         context.statistics,
+    );
+
+    cleanup.update(
+        &self.enemies,
+        &self.projectiles,
+        &self.explosions,
+        screen_size
     );
 
     if (collision_result.player_died)
@@ -157,6 +172,7 @@ pub fn view(self: *const Self) SimulationView {
         .player = &self.player,
         .enemies = self.enemies.items,
         .projectiles = self.projectiles.items,
+        .explosions = self.explosions.items,
     };
 }
 

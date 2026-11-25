@@ -7,6 +7,7 @@ const SimulationView = core.SimulationView;
 const Player = core.Player;
 const Enemy = core.Enemy;
 const Projectile = core.Projectile;
+const Explosion = core.Explosion;
 
 const ResourceManager = resources_module.ResourceManager;
 
@@ -30,6 +31,7 @@ pub fn draw(
     drawPlayer(view.player);
     drawEnemies(view.enemies);
     drawProjectiles(view.projectiles);
+    drawExplosions(view.explosions);
 }
 
 fn drawPlayer(
@@ -68,5 +70,27 @@ fn drawProjectiles(
             p.body.size,
             p.body.color
         );
+}
+
+fn drawExplosions(
+    explosions: []const Explosion,
+) void {
+    for (explosions) |explosion| {
+        for (explosion.particles[0..explosion.particle_count]) |particle| {
+            if (particle.expired())
+                continue;
+
+            var color = particle.color;
+            const remaining = 1.0 - particle.progress();
+            color.a = @intFromFloat(255.0 * remaining);
+
+            platform.drawCircle(
+                particle.position.x,
+                particle.position.y,
+                particle.radius,
+                color,
+            );
+        }
+    }
 }
 

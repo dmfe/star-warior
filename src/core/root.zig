@@ -6,4 +6,5 @@ pub const SimulationView = @import("simulation_view.zig").SimulationView;
 pub const Player = @import("entities/player.zig");
 pub const Enemy = @import("entities/enemy.zig");
 pub const Projectile = @import("entities/projectile.zig");
+pub const Explosion = @import("entities/explosion.zig");
 
