@@ -6,7 +6,7 @@ uniform float iTime;
 uniform vec2 iResolution;
 uniform float direction_modifier;
 
-#define NUM_LAYERS 4.
+#define NUM_LAYERS 2.
 
 mat2 Rot(float a) {
     float s = sin(a);

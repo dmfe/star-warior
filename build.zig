@@ -143,10 +143,14 @@ pub fn build(b: *std.Build) !void {
         emcc_cmd.addFileArg(b.path("src/web/storage.js"));
         emcc_cmd.addArg("--shell-file");
         emcc_cmd.addFileArg(b.path("src/web/shell.html"));
-        emcc_cmd.addArgs(&.{
-            "--preload-file",
-            "assets@/assets",
-        });
+        emcc_cmd.addArg("--preload-file");
+        emcc_cmd.addDirectoryArg2(
+            b.path("assets"),
+            .{
+                .suffix = "@/assets",
+            },
+        );
+
         emcc_cmd.step.dependOn(&wasm.step);
         emcc_cmd.step.dependOn(&raylib_artifact.step);
 
