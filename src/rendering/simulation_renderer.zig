@@ -1,49 +1,46 @@
-const std = @import("std");
 const core = @import("core");
 const platform = @import("platform");
 const resources_module = @import("resources");
 
 const SimulationView = core.SimulationView;
-const Player = core.Player;
 const Enemy = core.Enemy;
 const Projectile = core.Projectile;
 const Explosion = core.Explosion;
 
 const ResourceManager = resources_module.ResourceManager;
 
+const PlayerRenderer = @import("player_renderer.zig");
+
 const Self = @This();
+player_renderer: PlayerRenderer,
 
 pub fn init(
     resources: *const ResourceManager,
-) Self {
-    const shaders_count = resources.shaders.count();
-    std.log.info("Init simulation renderer. Shaders loaded: {}", .{shaders_count});
-    return .{};
+) !Self {
+    return .{
+        .player_renderer = try PlayerRenderer.init(resources),
+    };
+}
+
+pub fn update(
+    self: *Self,
+    delta_time: f32
+) void {
+    self.player_renderer.update(delta_time);
 }
 
 pub fn draw(
     self: *const Self,
-    resources: *ResourceManager,
+    resources: *const ResourceManager,
     view: SimulationView,
 ) void {
-    _ = self;
-    _ = resources;
-    drawPlayer(view.player);
+    self.player_renderer.draw(
+        resources,
+        view.player,
+    );
     drawEnemies(view.enemies);
     drawProjectiles(view.projectiles);
     drawExplosions(view.explosions);
-}
-
-fn drawPlayer(
-    player: *const Player,
-) void {
-    const body = player.body;
-    platform.drawCircle(
-        body.position.x,
-        body.position.y,
-        body.size / 2.0,
-        body.color
-    );
 }
 
 fn drawEnemies(

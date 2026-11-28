@@ -58,7 +58,7 @@ pub fn init(
         }),
         .statistics = .{ .max_score = max_score },
         .background_renderer = try BackgroundRenderer.init(resources),
-        .simulation_renderer = SimulationRenderer.init(resources),
+        .simulation_renderer = try SimulationRenderer.init(resources),
         .hud_renderer = HudRenderer.init(resources),
     };
 }
@@ -85,6 +85,8 @@ pub fn update(
         return app_command;
 
     if (!self.layers.blocksSimulationUpdate()) {
+        self.simulation_renderer.update(delta_time);
+
         var simulation_context: SimulationContext = .{
             .statistics = &self.statistics,
         };

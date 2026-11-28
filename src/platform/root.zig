@@ -19,6 +19,7 @@ pub const screenHeight = common.screenHeight;
 pub const measureText = common.measureText; 
 
 pub const Shader = @import("raylib/shader.zig");
+pub const Texture = @import("raylib/texture.zig");
 
 const storage = if (builtin.target.os.tag == .emscripten)
     @import("storage_web.zig")

@@ -52,7 +52,11 @@ pub fn init(config: Config) !Self {
     // loading resources
     _ = try resources.loadShader(
         "shader/starfield",
-        "starfield.fs"
+        "starfield.fs",
+    );
+    _ = try resources.loadTexture(
+        "texture/player",
+        "star-warior-sheet-128-480.png",
     );
 
     const main_menu = try MainMenu.init(&resources);

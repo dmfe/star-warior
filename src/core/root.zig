@@ -7,4 +7,5 @@ pub const Player = @import("entities/player.zig");
 pub const Enemy = @import("entities/enemy.zig");
 pub const Projectile = @import("entities/projectile.zig");
 pub const Explosion = @import("entities/explosion.zig");
+pub const PlayerVisualState = @import("entities/player_visual_state.zig").PlayerVisualState;
 
